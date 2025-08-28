@@ -1,26 +1,6 @@
-<div align="center">
-
-<p align="center">
-    <img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/logo.png" width="300"/>
-<p>
-
 <h1 align="center">
 dots.ocr: Multilingual Document Layout Parsing in a Single Vision-Language Model
 </h1>
-
-[![Blog](https://img.shields.io/badge/Blog-View_on_GitHub-333.svg?logo=github)](https://github.com/rednote-hilab/dots.ocr/blob/master/assets/blog.md)
-[![HuggingFace](https://img.shields.io/badge/HuggingFace%20Weights-black.svg?logo=HuggingFace)](https://huggingface.co/rednote-hilab/dots.ocr)
-
-
-<div align="center">
-  <a href="https://dotsocr.xiaohongshu.com" target="_blank" rel="noopener noreferrer"><strong>🖥️ Live Demo</strong></a> | 
-  <a href="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/wechat.jpg" target="_blank" rel="noopener noreferrer"><strong>💬 WeChat</strong></a> | 
-  <a href="https://www.xiaohongshu.com/user/profile/683ffe42000000001d021a4c" target="_blank" rel="noopener noreferrer"><strong>📕 rednote</strong></a> | 
-  <a href="https://x.com/rednotehilab" target="_blank" rel="noopener noreferrer"><strong>🐦 X</strong></a>
-</div>
-
-</div>
-
 
 
 ## Introduction
@@ -33,15 +13,36 @@ dots.ocr: Multilingual Document Layout Parsing in a Single Vision-Language Model
 4.  **Efficient and Fast Performance:** Built upon a compact 1.7B LLM, **dots.ocr** provides faster inference speeds than many other high-performing models based on larger foundations.
 
 
-### Performance Comparison: dots.ocr vs. Competing Models
+### Performance Comparison on Document Parsing Benchmarks
 <img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/chart.png" border="0" />
 
 > **Notes:** 
 > - The EN, ZH metrics are the end2end evaluation results of [OmniDocBench](https://github.com/opendatalab/OmniDocBench), and Multilingual metric is the end2end evaluation results of dots.ocr-bench.
 
 
-## News 
-* ```2025.07.30 ``` 🚀 We release [dots.ocr](https://github.com/rednote-hilab/dots.ocr), — a multilingual documents parsing model based on 1.7b llm, with SOTA performance.
+## Show Case
+### Example for formula document
+<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/formula1.png" alt="formula1.png" border="0" />
+<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/formula2.png" alt="formula2.png" border="0" />
+<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/formula3.png" alt="formula3.png" border="0" />
+
+### Example for table document
+<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/table1.png" alt="table1.png" border="0" />
+<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/table2.png" alt="table2.png" border="0" />
+<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/table3.png" alt="table3.png" border="0" />
+
+### Example for multilingual document
+<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/Tibetan.png" alt="Tibetan.png" border="0" />
+<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/tradition_zh.png" alt="tradition_zh.png" border="0" />
+<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/nl.png" alt="nl.png" border="0" />
+<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/kannada.png" alt="kannada.png" border="0" />
+<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/russian.png" alt="russian.png" border="0" />
+
+### Example for reading order
+<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/reading_order.png" alt="reading_order.png" border="0" />
+
+### Example for grounding ocr
+<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/grounding.png" alt="grounding.png" border="0" />
 
 
 
@@ -850,7 +851,7 @@ This is an inhouse benchmark which contain 1493 pdf images with 100 languages.
 <td>Nanonets OCR</td>
 <td>67.0</td>
 <td>68.6</td>
-<td>77.7</td>
+<td><strong>77.7</strong></td>
 <td>39.5</td>
 <td>40.7</td>
 <td>69.9</td>
@@ -987,230 +988,34 @@ This is an inhouse benchmark which contain 1493 pdf images with 100 languages.
 [olmocr](https://github.com/allenai/olmocr), and our own internal evaluations.
 > - We delete the Page-header and Page-footer cells in the result markdown.
 
+## Methods
 
+### Pretrain
 
-# Quick Start
-## 1. Installation
-### Install dots.ocr
-```shell
-conda create -n dots_ocr python=3.12
-conda activate dots_ocr
+We developed a foundational Vision-Language Model (VLM) through a three-stage training process:
 
-git clone https://github.com/rednote-hilab/dots.ocr.git
-cd dots.ocr
+*   **Stage1: Vision Encoder Pre-training**
+    We trained a 1.2-billion-parameter Vision Encoder (VE) from scratch on a vast and comprehensive dataset of image-text pairs.
+*   **Stage2: VE Continued Pre-training**
+    We incorporated additional visual data, including OCR, video, grounding data, etc. Leveraging the `NaViT` architecture, our model supports high-resolution inputs of up to 11 million pixels. The VE was then aligned with the `Qwen2.5-1.5B` language model and trained on this diverse visual data with LLM frozen, which resulted in our general vision encoder `dots.vit`.
+*   **Stage3: VLM Specialization for OCR**
+    We then used a pure OCR dataset for training. To improve training efficiency, we first trained on a certain volume of tokens with the VE parameters frozen. Subsequently, we unfroze all parameters and continued training on an additional one-fifth of that token volume, which produced our foundational OCR model, `dots.ocr.base`.
 
-# Install pytorch, see https://pytorch.org/get-started/previous-versions/ for your cuda version
-pip install torch==2.7.0 torchvision==0.22.0 torchaudio==2.7.0 --index-url https://download.pytorch.org/whl/cu128
-pip install -e .
-```
+### SFT
 
-If you have trouble with the installation, try our [Docker Image](https://hub.docker.com/r/rednotehilab/dots.ocr) for an easier setup, and follow these steps:
-```shell
-git clone https://github.com/rednote-hilab/dots.ocr.git
-cd dots.ocr
-pip install -e .
-```
+The SFT stage was implemented on the following key strategies:
 
+*   **Diverse SFT Dataset:** We constructed a dataset of nearly 300,000 samples, integrating our in-house manual annotations, synthetic data (tables, formulas, multilingual OCR), as well as open-source datasets.
+*   **Iterative Data Flywheel:** We employed a feedback loop to build an inhouse multilingual structured layout data with 15k samples. This process, repeated over three iterations, involved:
+    *   Sampling "bad cases" based on model performance.
+    *   Manually annotating these cases.
+    *   Adding them back into the training set.
+*   **Reading Order:** We corrected the sequence of all layout element boxes to establish the correct reading order. This was primarily done using larger models for sorting, supplemented by rule-based post-processing methods. We found that with sufficient data diversity and quality, training the model on a list of elements sorted in their natural reading order yields excellent results.
+*   **Quality and Robustness:** We build a multi-expert system for data cleaning and distillation, and applied data augmentation (resizing, rotation, noise) to improve model robustness.
+*   **Multitask training:** We leveraged a single source of structured layout data to generate the SFT data with a variety of prompts. This approach enables the model to perform different tasks, such as detection and recognition, based on the specific prompt provided.
 
-### Download Model Weights
-> 💡**Note:** Please use a directory name without periods (e.g., `DotsOCR` instead of `dots.ocr`) for the model save path. This is a temporary workaround pending our integration with Transformers.
-```shell
-python3 tools/download_model.py
+The resulting `dots.ocr` model demonstrates performance on par with models possessing significantly more parameters.
 
-# with modelscope
-python3 tools/download_model.py --type modelscope
-```
-
-
-## 2. Deployment
-### vLLM inference
-We highly recommend using vllm for deployment and inference. All of our evaluations results are based on vllm version 0.9.1.
-The [Docker Image](https://hub.docker.com/r/rednotehilab/dots.ocr) is based on the official vllm image. You can also follow [Dockerfile](https://github.com/rednote-hilab/dots.ocr/blob/master/docker/Dockerfile) to build the deployment environment by yourself. 
-
-```shell
-# You need to register model to vllm at first
-python3 tools/download_model.py
-export hf_model_path=./weights/DotsOCR  # Path to your downloaded model weights, Please use a directory name without periods (e.g., `DotsOCR` instead of `dots.ocr`) for the model save path. This is a temporary workaround pending our integration with Transformers.
-export PYTHONPATH=$(dirname "$hf_model_path"):$PYTHONPATH
-sed -i '/^from vllm\.entrypoints\.cli\.main import main$/a\
-from DotsOCR import modeling_dots_ocr_vllm' `which vllm`  # If you downloaded model weights by yourself, please replace `DotsOCR` by your model saved directory name, and remember to use a directory name without periods (e.g., `DotsOCR` instead of `dots.ocr`) 
-
-# launch vllm server
-CUDA_VISIBLE_DEVICES=0 vllm serve ${hf_model_path} --tensor-parallel-size 1 --gpu-memory-utilization 0.95  --chat-template-content-format string --served-model-name model --trust-remote-code
-
-# If you get a ModuleNotFoundError: No module named 'DotsOCR', please check the note above on the saved model directory name.
-
-# vllm api demo
-python3 ./demo/demo_vllm.py --prompt_mode prompt_layout_all_en
-```
-
-### Hugginface inference
-```shell
-python3 demo/demo_hf.py
-```
-
-<details>
-<summary><b>Hugginface inference details</b></summary>
-
-```python
-import torch
-from transformers import AutoModelForCausalLM, AutoProcessor, AutoTokenizer
-from qwen_vl_utils import process_vision_info
-from dots_ocr.utils import dict_promptmode_to_prompt
-
-model_path = "./weights/DotsOCR"
-model = AutoModelForCausalLM.from_pretrained(
-    model_path,
-    attn_implementation="flash_attention_2",
-    torch_dtype=torch.bfloat16,
-    device_map="auto",
-    trust_remote_code=True
-)
-processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
-
-image_path = "demo/demo_image1.jpg"
-prompt = """Please output the layout information from the PDF image, including each layout element's bbox, its category, and the corresponding text content within the bbox.
-
-1. Bbox format: [x1, y1, x2, y2]
-
-2. Layout Categories: The possible categories are ['Caption', 'Footnote', 'Formula', 'List-item', 'Page-footer', 'Page-header', 'Picture', 'Section-header', 'Table', 'Text', 'Title'].
-
-3. Text Extraction & Formatting Rules:
-    - Picture: For the 'Picture' category, the text field should be omitted.
-    - Formula: Format its text as LaTeX.
-    - Table: Format its text as HTML.
-    - All Others (Text, Title, etc.): Format their text as Markdown.
-
-4. Constraints:
-    - The output text must be the original text from the image, with no translation.
-    - All layout elements must be sorted according to human reading order.
-
-5. Final Output: The entire output must be a single JSON object.
-"""
-
-messages = [
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "image",
-                    "image": image_path
-                },
-                {"type": "text", "text": prompt}
-            ]
-        }
-    ]
-
-# Preparation for inference
-text = processor.apply_chat_template(
-    messages, 
-    tokenize=False, 
-    add_generation_prompt=True
-)
-image_inputs, video_inputs = process_vision_info(messages)
-inputs = processor(
-    text=[text],
-    images=image_inputs,
-    videos=video_inputs,
-    padding=True,
-    return_tensors="pt",
-)
-
-inputs = inputs.to("cuda")
-
-# Inference: Generation of the output
-generated_ids = model.generate(**inputs, max_new_tokens=24000)
-generated_ids_trimmed = [
-    out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
-]
-output_text = processor.batch_decode(
-    generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-)
-print(output_text)
-
-```
-
-</details>
-
-### Hugginface inference with CPU
-Please refer to [CPU inference](https://github.com/rednote-hilab/dots.ocr/issues/1#issuecomment-3148962536)
-
-
-## 3. Document Parse
-**Based on vLLM server**, you can parse an image or a pdf file using the following commands:
-```bash
-
-# Parse all layout info, both detection and recognition
-# Parse a single image
-python3 dots_ocr/parser.py demo/demo_image1.jpg
-# Parse a single PDF
-python3 dots_ocr/parser.py demo/demo_pdf1.pdf  --num_thread 64  # try bigger num_threads for pdf with a large number of pages
-
-# Layout detection only
-python3 dots_ocr/parser.py demo/demo_image1.jpg --prompt prompt_layout_only_en
-
-# Parse text only, except Page-header and Page-footer
-python3 dots_ocr/parser.py demo/demo_image1.jpg --prompt prompt_ocr
-
-# Parse layout info by bbox
-python3 dots_ocr/parser.py demo/demo_image1.jpg --prompt prompt_grounding_ocr --bbox 163 241 1536 705
-
-```
-**Based on Transformers**, you can parse an image or a pdf file using the same commands above, just add `--use_hf true`. 
-
-> Notice: transformers is slower than vllm, if you want to use demo/* with transformers，just add `use_hf=True` in `DotsOCRParser(..,use_hf=True)`
-
-<details>
-<summary><b>Output Results</b></summary>
-
-1.  **Structured Layout Data** (`demo_image1.json`): A JSON file containing the detected layout elements, including their bounding boxes, categories, and extracted text.
-2.  **Processed Markdown File** (`demo_image1.md`): A Markdown file generated from the concatenated text of all detected cells.
-    *   An additional version, `demo_image1_nohf.md`, is also provided, which excludes page headers and footers for compatibility with benchmarks like Omnidocbench and olmOCR-bench.
-3.  **Layout Visualization** (`demo_image1.jpg`): The original image with the detected layout bounding boxes drawn on it.
-
-</details>
-
-## 4. Demo
-You can run the demo with the following command, or try directly at [live demo](https://dotsocr.xiaohongshu.com/)
-```bash
-python demo/demo_gradio.py
-```
-
-We also provide a demo for grounding ocr:
-```bash
-python demo/demo_gradio_annotion.py
-```
-
-
-### Example for formula document
-<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/formula1.png" alt="formula1.png" border="0" />
-<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/formula2.png" alt="formula2.png" border="0" />
-<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/formula3.png" alt="formula3.png" border="0" />
-
-### Example for table document
-<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/table1.png" alt="table1.png" border="0" />
-<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/table2.png" alt="table2.png" border="0" />
-<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/table3.png" alt="table3.png" border="0" />
-
-### Example for multilingual document
-<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/Tibetan.png" alt="Tibetan.png" border="0" />
-<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/tradition_zh.png" alt="tradition_zh.png" border="0" />
-<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/nl.png" alt="nl.png" border="0" />
-<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/kannada.png" alt="kannada.png" border="0" />
-<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/russian.png" alt="russian.png" border="0" />
-
-### Example for reading order
-<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/reading_order.png" alt="reading_order.png" border="0" />
-
-### Example for grounding ocr
-<img src="https://raw.githubusercontent.com/rednote-hilab/dots.ocr/master/assets/showcase/grounding.png" alt="grounding.png" border="0" />
-
-
-## Acknowledgments
-We would like to thank [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL), [aimv2](https://github.com/apple/ml-aim), [MonkeyOCR](https://github.com/Yuliang-Liu/MonkeyOCR), 
-[OmniDocBench](https://github.com/opendatalab/OmniDocBench), [PyMuPDF](https://github.com/pymupdf/PyMuPDF), for providing code and models. 
-
-We also thank [DocLayNet](https://github.com/DS4SD/DocLayNet), [M6Doc](https://github.com/HCIILAB/M6Doc), [CDLA](https://github.com/buptlihang/CDLA), [D4LA](https://github.com/AlibabaResearch/AdvancedLiterateMachinery) for providing valuable datasets. 
 
 ## Limitation & Future Work
 
@@ -1226,3 +1031,14 @@ We also thank [DocLayNet](https://github.com/DS4SD/DocLayNet), [M6Doc](https://g
 
 We are committed to achieving more accurate table and formula parsing, as well as enhancing the model's OCR capabilities for broader generalization, all while aiming for **a more powerful, more efficient model**. Furthermore, we are actively considering the development of **a more general-purpose perception model** based on Vision-Language Models (VLMs), which would integrate general detection, image captioning, and OCR tasks into a unified framework. **Parsing the content of the pictures in the documents** is also a key priority for our future work.
 We believe that collaboration is the key to tackling these exciting challenges. If you are passionate about advancing the frontiers of document intelligence and are interested in contributing to these future endeavors, we would love to hear from you. Please reach out to us via email at: [yanqing4@xiaohongshu.com].
+
+## Author List
+
+### Contributors
+Mi Jian, Yumeng Li, Bowen Wang, Xiaomin He, Zheyuan Gu
+
+### Project Leader
+Qing Yan
+
+### Advisor
+Colin Zhang, Lei Zhang
